@@ -19,7 +19,9 @@ transformer = transforms.Compose(
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),  # 0-255 to 0-1, numpy to tensors
         transforms.Normalize(
-            [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]  # 0-1 to [-1,1] , formula (x-mean)/std
+            # 0-1 to [-1,1] , formula (x-mean)/std
+            [0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5],
         ),
     ]
 )
@@ -54,13 +56,13 @@ print(classes)
 
 
 class ConvNet(nn.Module):
-    def __init__(self, num_classes=6):
+    def __init__(self, num_classes=5):
         super(ConvNet, self).__init__()
 
         # Output size after convolution filter
         # ((w-f+2P)/s) +1
 
-        # Input shape= (256,3,150,150)
+        # Input shape= (2   56,3,150,150)
 
         self.conv1 = nn.Conv2d(
             in_channels=3, out_channels=12, kernel_size=3, stride=1, padding=1
@@ -118,7 +120,7 @@ class ConvNet(nn.Module):
         return output
 
 
-model = ConvNet(num_classes=6).to(device)
+model = ConvNet(num_classes=5).to(device)
 
 # Optmizer and loss function
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=0.0001)
