@@ -1,54 +1,17 @@
 import os
 import numpy as np
 from regex import T
-import tensorflow as tf
-
 from imageio import imread
-from keras.utils.np_utils import to_categorical
 from sklearn.model_selection import train_test_split
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.metrics import accuracy_score
+from sklearn import metrics
 from os import listdir
 
-from tomlkit import string
-
-
-img_height = 180
-img_width = 180
-num_class = 4
+img_height = 600
+img_width = 600
+dataset_path = "O:\Downloads\PARENT_TRAIN"  # Change This To The Dataset Path
 test_size = 0.2
-
-
-dataset_path = "D:\RecipePal\DATASETS"
-
-# NOTE: Function below is the same as tf.keras.preprocessing.image_dataset_from_directory
-# Refer to TensorFlow Core V2.8.0 Logs  https://www.tensorflow.org/api_docs/python/tf/keras/utils/image_dataset_from_directory
-"""
-train_ds = tf.keras.utils.image_dataset_from_directory(  # Used for training set
-    dataset_path,  # Denotes file directory containg dataset
-    # Denotes that 80% of our dataset will be utilized for training & 20% will be used for validation
-    validation_split=0.2,
-    subset="training",  # Denotes what set this is
-    seed=123,  # random seed for shuffling & image transformations
-    image_size=(img_height, img_width),  # Size to resize images
-    batch_size=batch_size,  # Size of the batches of data
-)
-
-test_ds = tf.keras.utils.image_dataset_from_directory(  # Used for validation set
-    dataset_path,  # Denotes file directory containg dataset
-    # Denotes that 80% of our dataset will be utilized for training & 20% will be used for validation
-    validation_split=0.2,
-    subset="training",  # Denotes what set this is
-    seed=123,  # random seed for shuffling & image transformations
-    image_size=(img_height, img_width),  # Size to resize images
-    batch_size=batch_size,  # Size of the batches of data
-)
-
-class_names = train_ds.class_names
-"""
-
-
-# Processing images into 1 Dimensional Arrays so we'll need to reshape all images.
 
 
 def get_img(data_path):  # Function to obtain images and resize them.
@@ -92,7 +55,8 @@ def get_dataset(dataset_path):
         X_test,
         Y,
         Y_test,
-    ) = train_test_split(  # Create training and test sets by splitting the array into random test/train subsets
+        # Create training and test sets by splitting the array into random test/train subsets
+    ) = train_test_split(
         X, Y, test_size=test_size, random_state=42
     )  # refer to: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
     np.save("npy_dataset/X_test.npy", X_test)  # Save Testing Data
@@ -112,41 +76,57 @@ def get_info(
     return ref_labels
 
 
+def metric_data(model, data):
+    print("Clusters: {}".format(model.n_clusters))
+    print("Inertia: {}".format(model.inertia_))
+    print("Homogeneity : {}".format(metrics.homogeneity_score(data, model.labels_)))
+
+
+def accuracyTest():  # Determine Best
+    cluster_number = [10, 16, 36, 64]
+    for i in cluster_number:
+        total_clusters = len(np.unique(Y_test))
+        kmeans = MiniBatchKMeans(n_clusters=i)
+        kmeans.fit(X)
+        metric_data(kmeans, Y)
+        kmeans.labels_
+        reference_labels = get_info(kmeans.labels_, Y)  # Get Ref Labels
+        ingredient_labels = np.random.rand(len(kmeans.labels_))
+
+        for i in range(len(kmeans.labels_)):
+            ingredient_labels[i] = reference_labels[kmeans.labels_[i]]
+
+        print("Accuracy: {}".format(accuracy_score(ingredient_labels, Y)))
+        print("\n")
+
+
 get_dataset(dataset_path)
 
-
-# Load entire dataset
 X = np.load("npy_dataset\X.npy")
 Y = np.load("npy_dataset\Y.npy")
 X_test = np.load("npy_dataset\X_test.npy")
 Y_test = np.load("npy_dataset\Y_test.npy")
 
-X_test = X_test.astype("float32")
-
-
 X = X.reshape(len(X), -1)
 X_test = X_test.reshape(len(X_test), -1)
 
+X_test = np.load("npy_dataset\X_test.npy")
+Y_test = np.load("npy_dataset\Y_test.npy")
 
-total_clusters = len(np.unique(Y_test))
 
-kmeans = MiniBatchKMeans(n_clusters=total_clusters)
+kmeans = MiniBatchKMeans(n_clusters=64)
 
 kmeans.fit(X)
 
-kmeans.labels_
+reference_labels = get_info(kmeans.labels_, Y)
 
-reference_labels = get_info(kmeans.labels_, Y)  # Get Ref Labels
-
-# Obtain labels for ingredients percieved in the cluster
 ingredient_labels = np.random.rand(len(kmeans.labels_))
 
+
 for i in range(len(kmeans.labels_)):
+
     ingredient_labels[i] = reference_labels[kmeans.labels_[i]]
 
-# Now we may compare the predicted labels vs the actual labels
+print("Accuracy score : {}".format(accuracy_score(ingredient_labels, Y)))
 
-print(ingredient_labels[400].astype("int"))
-print(Y[:400])
-
-print(accuracy_score(ingredient_labels, Y))
+print("\n")
