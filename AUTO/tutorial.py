@@ -55,7 +55,6 @@ def download_image(download_path, url, file_name):
 
 		with open(file_path, "wb") as f:
 			image.save(f, "JPEG")
-
 		print("Success")
 	except Exception as e:
 		print('FAILED -', e)
