@@ -143,3 +143,14 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
